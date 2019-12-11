@@ -1,0 +1,13 @@
+server {
+	listen 443 ssl;
+
+	server_name lavrentyevas.devops.rebrain.srwx.net;	
+
+	ssl_certificate /etc/letsencrypt/live/lavrentyevas.devops.rebrain.srwx.net/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/lavrentyevas.devops.rebrain.srwx.net/privkey.pem;
+
+	location / {
+	 return 200 "lavrentyevas.devops.rebrain.srwx.net is ok with https://";
+	}
+}
+

@@ -1,0 +1,7 @@
+---
+- hosts: dev
+  roles:
+    - name: nginx-install
+    - name: nginx-virthosts
+      vars:
+       vhost_name: "lavrentyevas.devops.rebrain.srwx.net"

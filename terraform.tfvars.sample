@@ -1,0 +1,23 @@
+# Rename file and describe all variables below.
+
+# Vscale token
+vscale_token = ""
+
+# AWS_credentials
+aws_my_access_key = ""
+aws_my_secret_key = ""
+
+# Virtual machines
+devs = ["dev1.<your-login>", "dev2.<your-login>"]
+   
+
+# OS for virtual machines
+# You can use, for example, these templates:
+# debian_8_64_001_master
+# ubuntu_16.04_64_001_master
+# fedora_27_64_001_master
+os = {
+	"dev1.<your-login>" = "centos_7_64_001_master"
+        "dev2.<your-login>" = "fedora_27_64_001_master"
+}
+

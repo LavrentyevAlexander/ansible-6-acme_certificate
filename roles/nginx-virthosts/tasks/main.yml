@@ -1,0 +1,82 @@
+---
+- name: Installing letsencrypt
+  apt: name=letsencrypt state=present
+
+- name: Creating virtual host http {{vhost_name}} for nginx
+  template: 
+      src=virt_host.http.conf.j2 
+      dest=/etc/nginx/sites-enabled/{{vhost_name}}.conf 
+      owner=root 
+      group=root 
+      mode=0644
+  notify: restarting nginx
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: reloaded  
+
+- name: Create folder to store everything
+  file:
+    path: '~/.ssh/letsencrypt'
+    state: directory
+    mode: 0700
+
+- name: Create Letsencrypt Account private key
+  openssl_privatekey:
+    path: '~/.ssh/letsencrypt/letsencrypt.pem'
+
+- name: Create Domain Private Key
+  openssl_privatekey:
+    path: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net.pem'
+
+- name: Create Certificate Signing Request
+  openssl_csr:
+    path: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net.csr'
+    privatekey_path: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net.pem'
+    common_name: 'lavrentyevas.devops.rebrain.srwx.net'
+
+- name: Create a challenge
+  acme_certificate:
+    account_key_src: '~/.ssh/letsencrypt/letsencrypt.pem'
+    csr: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net.csr'
+    dest: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net.crt'
+    fullchain_dest: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net-fullchain.crt'
+    acme_directory: 'https://acme-staging-v02.api.letsencrypt.org/directory'
+    acme_version: 2
+    terms_agreed: yes
+  register: acme_cert_challenge
+
+- name: Create acme dir
+  file:
+    path: /var/www/html/lavrentyevas.devops.rebrain.srwx.net/.well-known/acme-challenge
+    state: directory
+    owner: root
+    group: root
+    recurse: true
+
+- name: Copy challenge
+  copy:
+    dest: /var/www/html/lavrentyevas.devops.rebrain.srwx.net/{{ acme_cert_challenge['challenge_data']['lavrentyevas.devops.rebrain.srwx.net']['http-01']['resource'] }}
+    content: "{{ acme_cert_challenge['challenge_data']['lavrentyevas.devops.rebrain.srwx.net']['http-01']['resource_value'] }}"
+  when: acme_cert_challenge is changed
+
+- name: Let the challenge be validated and retrieve the cert and intermediate certificate
+  acme_certificate:
+    account_key_src: '~/.ssh/letsencrypt/letsencrypt.pem'
+    acme_directory: 'https://acme-staging-v02.api.letsencrypt.org/directory'
+    acme_version: 2
+    csr: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net.csr'
+    terms_agreed: yes
+    fullchain_dest: '~/.ssh/letsencrypt/lavrentyevas.devops.rebrain.srwx.net-fullchain.crt'
+    data: "{{ acme_cert_challenge }}"
+  when: acme_cert_challenge is changed
+
+- name: Creating virtual host https {{vhost_name}} for nginx
+  template: 
+      src=virt_host.https.conf.j2 
+      dest=/etc/nginx/sites-enabled/{{vhost_name}}.conf 
+      owner=root 
+      group=root 
+      mode=0644
+  notify: restarting nginx

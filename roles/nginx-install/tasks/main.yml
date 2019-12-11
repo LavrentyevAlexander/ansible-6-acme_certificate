@@ -1,0 +1,7 @@
+---    
+- name: Installing nginx
+  apt: allow_unauthenticated=yes update_cache=yes name=nginx state=present
+
+- name: Removing default virtual host config
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify: restarting nginx

@@ -1,0 +1,13 @@
+server {
+	listen 80;
+
+	server_name {{vhost_name}};
+
+	location / {
+	  return 301 https://lavrentyevas.devops.rebrain.srwx.net$request_uri;
+}
+
+	location /.well-known {
+	  root /var/www/html/lavrentyevas.devops.rebrain.srwx.net/;
+	}
+}
